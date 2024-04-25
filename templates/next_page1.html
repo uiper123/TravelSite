@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Следующая вкладка</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+      .content {
+        text-align: center;
+        color: white;
+      }
+      .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #333;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+      }
+      .btn:hover {
+        background-color: #555;
+      }
+      .header {
+        background-color: #333;
+        color: white;
+        padding: 10px;
+        text-align: center;
+        border-radius: 5px 5px 0 0;
+      }
+      .nav-buttons {
+        display: flex;
+        justify-content: center;
+      }
+      .nav-buttons .btn {
+        margin: 0 10px;
+      }
+      .content {
+        display: flex;
+        height: calc(100vh - 90px);
+      }
+      .map-container {
+        flex: 1;
+        background-color: #f0f0f0;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+      #map {
+        height: 100%;
+      }
+      .sidebar {
+        width: 300px;
+        background-color: #e0e0e0;
+        padding: 20px;
+        border-radius: 5px;
+        margin-left: 20px;
+        overflow-y: auto;
+        max-height: calc(100vh - 150px);
+      }
+      .place-details {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="nav-buttons">
+        <a href="#" class="btn">Места</a>
+        <a href="#" class="btn" onclick="createRoute()">Создать маршрут</a>
+        <a href="#" class="btn">Справка</a>
+      </div>
+    </div>
+    <div class="content">
+      <div class="map-container">
+        <div id="map"></div>
+      </div>
+      <div class="sidebar">
+        <h2>Места</h2>
+        <div class="place-details"></div>
+      </div>
+    </div>
+
+    <script>
+
+      // Получение данных GeoJSON из контекстного объекта шаблона Flask
+      const geoJsonData = {{ geojson_data | safe }};
+      // Определение границ Кузбасса
+      const kuzbassBounds = [
+        [53.5, 85.5], // Юго-западный угол
+        [55.5, 88.5]  // Северо-восточный угол
+      ];
+
+      // Инициализация карты
+      const map = L.map('map', {
+        maxBounds: kuzbassBounds, // Ограничение области карты
+        maxBoundsViscosity: 1.0 // Плавное ограничение
+      }).fitBounds(kuzbassBounds);
+
+      // Добавление слоя OpenStreetMap
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      // Добавление границ Кузбасса на карту
+      // Ваши данные GeoJSON
+    
+
+      const kuzbassBoundary = L.geoJSON(geoJsonData, {
+        style: {
+          color: 'red',
+          weight: 2
+        }
+      }).addTo(map);
+
+// Установка границ карты по границам Кузбасса
+map.fitBounds(kuzbassBoundary.getBounds());
+
+      // Массив для хранения меток
+      const markers = [];
+
+      // Переменная для отслеживания текущего пользователя
+      let currentUser = null;
+
+      // Функция для добавления метки на карту
+      function addMarker(event) {
+        if (currentUser === null) {
+          currentUser = prompt('Введите ваше имя:');
+          if (!currentUser) return; // Выход из функции, если имя не введено
+        } else if (confirm(`Добавить метку от имени ${currentUser}?`)) {
+          const markerName = prompt('Введите название метки:');
+          if (!markerName) return; // Выход из функции, если название не введено
+      
+          const markerDescription = prompt('Введите описание метки:');
+          if (!markerDescription) return; // Выход из функции, если описание не введено
+      
+          const markerColor = prompt('Введите цвет метки (red, blue, green, yellow, purple, black):');
+          if (!markerColor) return; // Выход из функции, если цвет не введен
+      
+          const markerIcon = new L.Icon({
+            iconUrl: `https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-${markerColor}.png`,
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.3/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+          });
+      
+          const marker = L.marker(event.latlng, { icon: markerIcon }).addTo(map);
+          markers.push(marker);
+      
+          const markerImage = prompt('Введите URL фотографии (или оставьте пустым, если не нужно):');
+          let popupContent = `<b>${markerName}</b><br>${markerDescription}`;
+          if (markerImage) {
+            popupContent += `<br><img src="${markerImage}" width="200">`;
+          }
+          marker.bindPopup(popupContent);
+      
+          marker.on('click', function() {
+            marker.openPopup();
+            highlightMarker(marker);
+          });
+      
+          const placeDetails = document.querySelector('.place-details');
+          const placeItem = document.createElement('div');
+          placeItem.innerHTML = `
+            <h3>${markerName}</h3>
+            <p>${markerDescription}</p>
+            <button onclick="removeMarker(${markers.indexOf(marker)})">Удалить</button>
+          `;
+          placeDetails.appendChild(placeItem);
+        }
+      }
+
+      // Функция для удаления метки с карты и правой панели
+      function removeMarker(index) {
+        const marker = markers[index];
+        map.removeLayer(marker);
+        markers.splice(index, 1);
+      
+        // Удаление информации о метке из правой панели
+        const placeDetails = document.querySelector('.place-details');
+        const placeItems = placeDetails.querySelectorAll('div');
+        placeDetails.removeChild(placeItems[index]);
+      
+        // Удаление маршрута, если меток меньше двух
+        if (markers.length < 2 && routeControl) {
+          map.removeControl(routeControl);
+          routeControl = null;
+        }
+      }
+
+      // Добавление обработчика события для добавления метки при двойном клике на карту
+      map.on('dblclick', addMarker);
+
+      let routeControl = null;
+
+    function createRoute() {
+      if (markers.length < 2) {
+        alert('Вы должны добавить как минимум две метки для создания маршрута.');
+        return;
+      }
+
+      if (routeControl) {
+        map.removeControl(routeControl);
+      }
+
+      const start = markers[0].getLatLng();
+      const end = markers[1].getLatLng();
+
+      routeControl = L.Routing.control({
+        waypoints: [start, end],
+        routeWhileDragging: true,
+        createMarker: function() { return null; }
+      }).addTo(map);
+}
+
+      function highlightMarker(marker) {
+        markers.forEach(m => m.setIcon(defaultIcon));
+        marker.setIcon(highlightedIcon);
+      }
+
+      // Определение значений по умолчанию для иконок
+      const defaultIcon = new L.Icon.Default();
+      const highlightedIcon = new L.Icon({
+        iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.3/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+      });
+    </script>
+  </body>
+</html>
