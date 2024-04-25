@@ -82,6 +82,7 @@
       <div class="sidebar">
         <h2>Места</h2>
         <div class="place-details"></div>
+          <div class="route-list"></div>
       </div>
     </div>
 
@@ -118,7 +119,7 @@
       }).addTo(map);
 
 // Установка границ карты по границам Кузбасса
-map.fitBounds(kuzbassBoundary.getBounds());
+      map.fitBounds(kuzbassBoundary.getBounds());
 
       // Массив для хранения меток
       const markers = [];
@@ -130,15 +131,19 @@ map.fitBounds(kuzbassBoundary.getBounds());
       function addMarker(event) {
         if (currentUser === null) {
           currentUser = prompt('Введите ваше имя:');
+          
           if (!currentUser) return; // Выход из функции, если имя не введено
         } else if (confirm(`Добавить метку от имени ${currentUser}?`)) {
           const markerName = prompt('Введите название метки:');
+          
           if (!markerName) return; // Выход из функции, если название не введено
       
           const markerDescription = prompt('Введите описание метки:');
+          
           if (!markerDescription) return; // Выход из функции, если описание не введено
       
           const markerColor = prompt('Введите цвет метки (red, blue, green, yellow, purple, black):');
+          
           if (!markerColor) return; // Выход из функции, если цвет не введен
       
           const markerIcon = new L.Icon({
@@ -221,7 +226,17 @@ map.fitBounds(kuzbassBoundary.getBounds());
         }).addTo(map);
       
         routes.push(routeControl);
+        const routeList = document.querySelector('.route-list');
+        routes.forEach((route, index) => {
+          const routeItem = document.createElement('div');
+          routeItem.innerHTML = `
+            <h4>Маршрут ${index + 1}</h4>
+            <button onclick="removeRoute(${index})">Удалить</button>
+          `;
+          routeList.appendChild(routeItem);
+        });
       }
+      
 
       if (routeControl) {
         map.removeControl(routeControl);
@@ -235,6 +250,7 @@ map.fitBounds(kuzbassBoundary.getBounds());
         routeWhileDragging: true,
         createMarker: function() { return null; }
       }).addTo(map);
+      
 
       function highlightMarker(marker) {
         markers.forEach(m => {
