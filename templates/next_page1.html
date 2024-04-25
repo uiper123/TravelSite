@@ -188,8 +188,10 @@
       
         // Удаление информации о метке из правой панели
         const placeDetails = document.querySelector('.place-details');
-        const placeItems = placeDetails.querySelectorAll('div');
-        placeDetails.removeChild(placeItems[index]);
+        const placeItem = placeDetails.querySelector(`div:nth-child(${index + 1})`);
+        if (placeItem) {
+          placeDetails.removeChild(placeItem);
+        }
       
         // Удаление маршрутов, связанных с удаленной меткой
         routes.forEach((routeControl, routeIndex) => {
@@ -205,9 +207,7 @@
       let routeControl = null;
 
       function createRoute() {
-        const selectedMarkers = markers.filter(marker => marker.isHighlighted);
-      
-        if (selectedMarkers.length !== 2) {
+        if (highlightedMarkers.length !== 2) {
           alert('Вы должны выделить две метки для создания маршрута.');
           return;
         }
@@ -216,8 +216,8 @@
           map.removeControl(routeControl);
         }
       
-        const start = selectedMarkers[0].getLatLng();
-        const end = selectedMarkers[1].getLatLng();
+        const start = highlightedMarkers[0].getLatLng();
+        const end = highlightedMarkers[1].getLatLng();
       
         routeControl = L.Routing.control({
           waypoints: [start, end],
@@ -252,20 +252,23 @@
       }).addTo(map);
       
 
+      let highlightedMarkers = [];
+
       function highlightMarker(marker) {
-        markers.forEach(m => {
-          m.setIcon(defaultIcon);
-          m.isHighlighted = false;
-        });
-
-        marker.setIcon(highlightedIcon);
-        marker.isHighlighted = true;
-      }
-
-      function removeRoute(index) {
-        const routeControl = routes[index];
-        map.removeControl(routeControl);
-        routes.splice(index, 1);
+        if (highlightedMarkers.includes(marker)) {
+          // Метка уже выделена, снимаем выделение
+          marker.setIcon(defaultIcon);
+          highlightedMarkers = highlightedMarkers.filter(m => m !== marker);
+        } else {
+          // Выделяем метку
+          marker.setIcon(highlightedIcon);
+          highlightedMarkers.push(marker);
+      
+          // Если выделено две метки, создаем маршрут
+          if (highlightedMarkers.length === 2) {
+            createRoute();
+          }
+        }
       }
 
       // Определение значений по умолчанию для иконок
