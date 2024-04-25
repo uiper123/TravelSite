@@ -14,6 +14,18 @@
         text-align: center;
         color: white;
       }
+      /* Стили для выделенных маркеров */
+      .highlighted-marker {
+        background-color: yellow;
+        border: 2px solid black;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        display: inline-block;
+        position: relative;
+        top: -12px;
+        left: -8px;
+      }
       .btn {
         display: inline-block;
         padding: 10px 20px;
@@ -99,8 +111,12 @@
       // Инициализация карты
       const map = L.map('map', {
         maxBounds: kuzbassBounds, // Ограничение области карты
-        maxBoundsViscosity: 1.0 // Плавное ограничение
+        maxBoundsViscosity: 1.0, // Плавное ограничение
+        maxZoom: 15, // Максимальное приближение
+        minZoom: 7 // Минимальное приближение
       }).fitBounds(kuzbassBounds);
+
+
 
       // Добавление слоя OpenStreetMap
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -236,21 +252,6 @@
           routeList.appendChild(routeItem);
         });
       }
-      
-
-      if (routeControl) {
-        map.removeControl(routeControl);
-      }
-
-      const start = markers[0].getLatLng();
-      const end = markers[1].getLatLng();
-
-      routeControl = L.Routing.control({
-        waypoints: [start, end],
-        routeWhileDragging: true,
-        createMarker: function() { return null; }
-      }).addTo(map);
-      
 
       let highlightedMarkers = [];
 
@@ -258,10 +259,18 @@
         if (highlightedMarkers.includes(marker)) {
           // Метка уже выделена, снимаем выделение
           marker.setIcon(defaultIcon);
+          const highlightedMarkerEl = marker._icon.querySelector('.highlighted-marker');
+          if (highlightedMarkerEl) {
+            highlightedMarkerEl.remove();
+          }
           highlightedMarkers = highlightedMarkers.filter(m => m !== marker);
         } else {
           // Выделяем метку
           marker.setIcon(highlightedIcon);
+          const markerIconEl = marker._icon;
+          const highlightedMarkerEl = document.createElement('div');
+          highlightedMarkerEl.classList.add('highlighted-marker');
+          markerIconEl.appendChild(highlightedMarkerEl);
           highlightedMarkers.push(marker);
       
           // Если выделено две метки, создаем маршрут
