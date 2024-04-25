@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ваш сайт</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+        body {
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            background-color: transparent;
+        }
+
+        .organization {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          background-color: rgba(255, 255, 255, 0);
+          padding: 20px;
+          box-sizing: border-box;
+      }
+      
+      .org-content {
+          max-width: 800px;
+          margin: 0 auto;
+          text-align: center;
+          color: white;
+          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+      }
+        .background-images {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        .background-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .content {
+            text-align: center;
+            color: rgb(255, 255, 255);
+            padding: 40px;
+            border-radius: 20px;
+            background-color: rgba(255, 255, 255, 0);
+            max-width: 800px;
+        }
+        .logo {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 40px;
+        }
+        .big-text {
+            font-size: 72px;
+            margin-bottom: 50px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .big-btn {
+            font-size: 28px;
+            padding: 20px 40px;
+            border-radius: 10px;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #555;
+        }
+        .creator {
+            margin-top: 40px;
+            font-size: 18px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="background-images">
+        <img src="https://img.geliophoto.com/sheregesh/41_sheregesh.jpg" alt="Background Image 1" class="background-image">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/7/7c/%D0%A1%D0%BA%D0%B0%D0%B7%D0%BE%D1%87%D0%BD%D1%8B%D0%B9_%D0%A8%D0%B5%D1%80%D0%B5%D0%B3%D0%B5%D1%88.jpg" alt="Background Image 2" class="background-image">
+        <img src="https://images.wallpaperscraft.ru/image/single/pustynia_pesok_diuny_140786_2780x2780.jpg" alt="Background Image 3" class="background-image">
+    </div>
+    <div class="overlay">
+        <div class="content">
+            <h2 class="big-text">Kuzout</h2>
+            <a href="{{ url_for('next_page1') }}" class="btn big-btn">Начать</a>
+        </div>
+    <div class="organization">
+          <div class="org-content">
+              <h3>Название организации</h3>
+              <p>Краткая информация об организации</p>
+          </div>
+      </div>
+    </div>
+    <script>
+        const backgroundImages = document.querySelectorAll('.background-image');
+        let currentIndex = 0;
+        function showNextImage() {
+            backgroundImages[currentIndex].style.opacity = 0;
+            currentIndex = (currentIndex + 1) % backgroundImages.length;
+            backgroundImages[currentIndex].style.opacity = 1;
+        }
+        setInterval(showNextImage, 5000); // Смена изображения каждые 5 секунд
+    </script>
+</body>
+</html>
