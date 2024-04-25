@@ -122,7 +122,7 @@ map.fitBounds(kuzbassBoundary.getBounds());
 
       // Массив для хранения меток
       const markers = [];
-
+      const routes = [];
       // Переменная для отслеживания текущего пользователя
       let currentUser = null;
 
@@ -176,7 +176,6 @@ map.fitBounds(kuzbassBoundary.getBounds());
         }
       }
 
-      // Функция для удаления метки с карты и правой панели
       function removeMarker(index) {
         const marker = markers[index];
         map.removeLayer(marker);
@@ -187,22 +186,41 @@ map.fitBounds(kuzbassBoundary.getBounds());
         const placeItems = placeDetails.querySelectorAll('div');
         placeDetails.removeChild(placeItems[index]);
       
-        // Удаление маршрута, если меток меньше двух
-        if (markers.length < 2 && routeControl) {
-          map.removeControl(routeControl);
-          routeControl = null;
-        }
+        // Удаление маршрутов, связанных с удаленной меткой
+        routes.forEach((routeControl, routeIndex) => {
+          const waypoints = routeControl.getWaypoints();
+          if (waypoints.some(waypoint => waypoint.latLng.equals(marker.getLatLng()))) {
+            removeRoute(routeIndex);
+          }
+        });
       }
-
       // Добавление обработчика события для добавления метки при двойном клике на карту
       map.on('dblclick', addMarker);
 
       let routeControl = null;
 
-    function createRoute() {
-      if (markers.length < 2) {
-        alert('Вы должны добавить как минимум две метки для создания маршрута.');
-        return;
+      function createRoute() {
+        const selectedMarkers = markers.filter(marker => marker.isHighlighted);
+      
+        if (selectedMarkers.length !== 2) {
+          alert('Вы должны выделить две метки для создания маршрута.');
+          return;
+        }
+      
+        if (routeControl) {
+          map.removeControl(routeControl);
+        }
+      
+        const start = selectedMarkers[0].getLatLng();
+        const end = selectedMarkers[1].getLatLng();
+      
+        routeControl = L.Routing.control({
+          waypoints: [start, end],
+          routeWhileDragging: true,
+          createMarker: function() { return null; }
+        }).addTo(map);
+      
+        routes.push(routeControl);
       }
 
       if (routeControl) {
@@ -217,11 +235,21 @@ map.fitBounds(kuzbassBoundary.getBounds());
         routeWhileDragging: true,
         createMarker: function() { return null; }
       }).addTo(map);
-}
 
       function highlightMarker(marker) {
-        markers.forEach(m => m.setIcon(defaultIcon));
+        markers.forEach(m => {
+          m.setIcon(defaultIcon);
+          m.isHighlighted = false;
+        });
+
         marker.setIcon(highlightedIcon);
+        marker.isHighlighted = true;
+      }
+
+      function removeRoute(index) {
+        const routeControl = routes[index];
+        map.removeControl(routeControl);
+        routes.splice(index, 1);
       }
 
       // Определение значений по умолчанию для иконок
