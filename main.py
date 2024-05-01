@@ -1,9 +1,14 @@
 from flask import Flask, render_template
 import json
 
+with open('places.json', 'r', encoding='utf-8') as f:
+    places_data = json.load(f)
+    
 with open('map.geojson', 'r') as f:
     geojson_data = json.load(f)
-    
+
+with open('bounce.geojson', 'r') as f:
+    bounce_data = json.load(f)
 
 app = Flask(__name__)
 
@@ -13,7 +18,7 @@ def index():
 
 @app.route('/next_page1')
 def next_page1():
-    return render_template('next_page1.html', geojson_data=json.dumps(geojson_data))
+    return render_template('next_page1.html', geojson_data=json.dumps(geojson_data), bounce_data=json.dumps(bounce_data), places_data=json.dumps(places_data))
 
 @app.route('/next_page1/next_page2')
 def next_page2():
